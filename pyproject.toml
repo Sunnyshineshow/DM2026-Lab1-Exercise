@@ -25,4 +25,5 @@ dependencies = [
     "cryptography==50.0.1",
     "pytest==9.1.1",
     "kaleido==1.4.0",
+    "langchain-openrouter>=0.2.9",
 ]
