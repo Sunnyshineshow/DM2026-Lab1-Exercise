@@ -1,6 +1,6 @@
 import os
 import pathlib
-from typing import Optional
+from typing import Optional, List
 import pandas as pd
 import numpy as np
 import nltk
@@ -59,31 +59,64 @@ def make_tools(session):
         return summary
 
     @tool
-    def inspect_data_tool(n_rows: int = 5) -> dict:
+    def inspect_data_tool(
+        start_index: int = 0,
+        n_rows: int = 5,
+        from_tail: bool = False,
+        columns: Optional[List[str]] = None
+    ) -> dict:
         """
-        Inspects the top rows and general information of session.dataframe.
+        Inspects a flexible window of rows from session.dataframe (from top, middle, or tail).
 
         Args:
-            n_rows: Number of top rows to preview. Defaults to 5.
+            start_index: Row index offset (supports positive or negative indexing). Defaults to 0.
+            n_rows: Number of rows to inspect. Defaults to 5.
+            from_tail: If True, inspects the last n_rows from the end of the DataFrame. Defaults to False.
+            columns: Optional list of specific column names to view.
         """
         if session.dataframe is None:
             return {"error": "No DataFrame loaded in session. Please load a dataset first."}
 
         df = session.dataframe
         total_rows = len(df)
-        total_cols = len(df.columns)
-        columns = list(df.columns)
-        sample_rows = df.head(n_rows).to_dict(orient="records")
+
+        if columns is not None:
+            valid_cols = [c for c in columns if c in df.columns]
+            if not valid_cols:
+                return {"error": f"None of the requested columns {columns} exist in DataFrame."}
+            slice_df = df[valid_cols]
+        else:
+            slice_df = df
+
+        if from_tail:
+            sliced = slice_df.tail(n_rows)
+        else:
+            if start_index < 0:
+                start_idx = max(0, total_rows + start_index)
+            else:
+                start_idx = min(total_rows, start_index)
+            
+            end_idx = min(total_rows, start_idx + n_rows)
+            sliced = slice_df.iloc[start_idx:end_idx]
+
+        sample_rows = sliced.to_dict(orient="records")
 
         result_id = session.next_result_id("inspect_data")
         summary = {
             "result_id": result_id,
             "total_rows": total_rows,
-            "total_cols": total_cols,
-            "columns": columns,
+            "total_cols": len(df.columns),
+            "columns": list(slice_df.columns),
+            "data_types": {c: str(df[c].dtype) for c in slice_df.columns},
+            "sliced_indices": list(sliced.index),
+            "n_rows_returned": len(sliced),
             "sample_rows": sample_rows,
         }
-        session.store_result("inspect_data_tool", {"n_rows": n_rows}, summary)
+        session.store_result("inspect_data_tool", {
+            "start_index": start_index,
+            "n_rows": n_rows,
+            "from_tail": from_tail
+        }, summary)
         return summary
 
     @tool

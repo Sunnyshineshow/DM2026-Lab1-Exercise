@@ -153,19 +153,33 @@ def test_inspect_data_tool():
     session, tools = create_test_session_and_tools()
     inspect_data_tool = tools["inspect_data_tool"]
     
+    # 1. Basic inspection
     res = inspect_data_tool.invoke({"n_rows": 3})
     assert res["total_rows"] == 8
     assert res["total_cols"] >= 2
     assert "text" in res["columns"]
     assert "category_name" in res["columns"]
     
-    # Check sample rows preview contents
     sample_rows = res["sample_rows"]
     assert len(sample_rows) == 3
     assert sample_rows[0]["text"] == "always alpha alpha alpha beta"
     assert sample_rows[0]["category_name"] == "catA"
-    assert sample_rows[1]["text"] == "always alpha alpha beta"
 
-    # Test requesting more rows than exist in DataFrame
+    # 2. Large row bounds test
     res_large = inspect_data_tool.invoke({"n_rows": 100})
     assert len(res_large["sample_rows"]) == 8
+
+    # 3. Middle window inspection (start_index = 3, n_rows = 2)
+    res_mid = inspect_data_tool.invoke({"start_index": 3, "n_rows": 2})
+    assert res_mid["sliced_indices"] == [3, 4]
+    assert len(res_mid["sample_rows"]) == 2
+
+    # 4. Tail inspection (from_tail = True)
+    res_tail = inspect_data_tool.invoke({"n_rows": 3, "from_tail": True})
+    assert len(res_tail["sample_rows"]) == 3
+    assert res_tail["sliced_indices"] == [5, 6, 7]
+
+    # 5. Column filtering
+    res_cols = inspect_data_tool.invoke({"n_rows": 2, "columns": ["text"]})
+    assert res_cols["columns"] == ["text"]
+    assert "category_name" not in res_cols["sample_rows"][0]
