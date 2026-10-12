@@ -87,35 +87,73 @@ def make_tools(session):
         return summary
 
     @tool
-    def dtm_heatmap_tool(n_terms: int = 20, n_documents: int = 20) -> Dict[str, Any]:
-        """Generates a heatmap of a slice of the raw Document-Term Matrix.
+    def dtm_heatmap_tool(
+        n_terms: int = 20,
+        n_documents: int = 20,
+        selected_terms: Optional[List[str]] = None,
+        document_indices: Optional[List[int]] = None
+    ) -> Dict[str, Any]:
+        """Generates a heatmap of a slice or specific selection of the raw Document-Term Matrix.
 
         Args:
-            n_terms: Number of terms (columns) to include in the slice.
-            n_documents: Number of documents (rows) to include in the slice.
+            n_terms: Number of terms (columns) to include in default positional slice.
+            n_documents: Number of documents (rows) to include in default positional slice.
+            selected_terms: Specific term names to include. Overrides positional n_terms if provided.
+            document_indices: Specific document row indices to include. Overrides n_documents if provided.
         """
         if session.feature_matrix is None or session.feature_names is None:
             return {"error": "No feature matrix found. Call build_dtm_tool first."}
 
         total_docs, total_terms = session.feature_matrix.shape
-        doc_slice = min(n_documents, total_docs)
-        term_slice = min(n_terms, total_terms)
 
-        submatrix = session.feature_matrix[0:doc_slice, 0:term_slice].toarray()
-        selected_terms = session.feature_names[0:term_slice]
-        doc_labels = [f"Doc_{i}" for i in range(doc_slice)]
+        # Resolve document selection
+        if document_indices is not None:
+            if len(document_indices) == 0:
+                return {"error": "document_indices was explicitly provided as an empty list."}
+            invalid_docs = [i for i in document_indices if i < 0 or i >= total_docs]
+            if invalid_docs:
+                return {
+                    "error": f"Invalid document indices provided: {invalid_docs}. "
+                             f"Valid range is 0 to {total_docs - 1}."
+                }
+            doc_idx = list(document_indices)
+        else:
+            doc_slice = min(n_documents, total_docs)
+            doc_idx = list(range(doc_slice))
 
-        fig, ax = plt.subplots(figsize=(max(6, term_slice * 0.8), max(4, doc_slice * 0.4)))
+        # Resolve term selection
+        if selected_terms is not None:
+            if len(selected_terms) == 0:
+                return {"error": "selected_terms was explicitly provided as an empty list."}
+            name_to_idx = {name: idx for idx, name in enumerate(session.feature_names)}
+            unknown_terms = [t for t in selected_terms if t not in name_to_idx]
+            if unknown_terms:
+                return {"error": f"Unknown terms provided: {unknown_terms}."}
+            term_idx = [name_to_idx[t] for t in selected_terms]
+        else:
+            term_slice = min(n_terms, total_terms)
+            term_idx = list(range(term_slice))
+
+        if not doc_idx or not term_idx:
+            return {"error": "Selected document or term criteria resulted in an empty matrix slice."}
+
+        submatrix = session.feature_matrix[doc_idx, :][:, term_idx].toarray()
+        chosen_terms = [session.feature_names[j] for j in term_idx]
+        doc_labels = [f"Doc_{i}" for i in doc_idx]
+
+        fig, ax = plt.subplots(
+            figsize=(max(6, len(chosen_terms) * 0.8), max(4, len(doc_idx) * 0.4))
+        )
         sns.heatmap(
             submatrix,
             annot=True,
             fmt="d",
             cmap="YlGnBu",
-            xticklabels=selected_terms,
+            xticklabels=chosen_terms,
             yticklabels=doc_labels,
             ax=ax
         )
-        ax.set_title(f"DTM Heatmap (Top {doc_slice} Docs x Top {term_slice} Terms)")
+        ax.set_title(f"DTM Heatmap ({len(doc_idx)} Docs x {len(chosen_terms)} Terms)")
         plt.tight_layout()
 
         session.pending_figure = fig
@@ -123,13 +161,22 @@ def make_tools(session):
         result_id = session.next_result_id("dtm_heatmap")
         summary = {
             "result_id": result_id,
-            "sliced_shape": [doc_slice, term_slice],
-            "terms": selected_terms,
+            "sliced_shape": [len(doc_idx), len(chosen_terms)],
+            "terms": chosen_terms,
             "documents": doc_labels,
             "matrix": submatrix.tolist()
         }
 
-        session.store_result("dtm_heatmap_tool", {"n_terms": n_terms, "n_documents": n_documents}, summary)
+        session.store_result(
+            "dtm_heatmap_tool",
+            {
+                "n_terms": n_terms,
+                "n_documents": n_documents,
+                "selected_terms": selected_terms,
+                "document_indices": document_indices
+            },
+            summary
+        )
         return summary
 
     return [build_dtm_tool, term_frequency_tool, dtm_heatmap_tool]
