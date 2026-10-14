@@ -73,9 +73,15 @@ def test_check_duplicates_tool():
     res_text_subset = check_duplicates_tool.invoke({"subset": "text", "drop": False})
     assert res_text_subset["n_duplicates"] == 2
 
-    # Reset session and verify dropping with keep=False drops rows 5 and 6, leaving 6 rows
+    # Reset session and verify dropping with keep_first=True keeps row 5 and drops row 6 (leaves 7 rows)
     session, tools = create_test_session_and_tools()
-    res_drop = tools["check_duplicates_tool"].invoke({"drop": True})
+    res_drop_kf = tools["check_duplicates_tool"].invoke({"drop": True, "keep_first": True})
+    assert res_drop_kf["rows_dropped"] == 1
+    assert res_drop_kf["remaining_rows"] == 7
+
+    # Reset session and verify dropping with keep_first=False (default) drops rows 5 and 6, leaving 6 rows
+    session, tools = create_test_session_and_tools()
+    res_drop = tools["check_duplicates_tool"].invoke({"drop": True, "keep_first": False})
     assert res_drop["rows_dropped"] == 2
     assert res_drop["remaining_rows"] == 6
 

@@ -150,13 +150,19 @@ def make_tools(session):
         return summary
 
     @tool
-    def check_duplicates_tool(subset: Optional[str] = None, drop: bool = False) -> dict:
+    def check_duplicates_tool(
+        subset: Optional[str] = None,
+        drop: bool = False,
+        keep_first: bool = False
+    ) -> dict:
         """
-        Checks for duplicate entries in session.dataframe and optionally drops them using keep=False.
+        Checks for duplicate entries in session.dataframe and optionally drops them.
 
         Args:
             subset: Column name to check for duplicates, or None to check original/data columns. Defaults to None.
             drop: Whether to drop duplicate rows in-place. Defaults to False.
+            keep_first: If True, keeps the first occurrence when dropping (keep='first').
+                       If False, drops all duplicate copies (keep=False). Defaults to False.
         """
         if session.dataframe is None:
             return {"error": "No DataFrame loaded in session. Please load a dataset first."}
@@ -180,7 +186,8 @@ def make_tools(session):
 
         rows_dropped = 0
         if drop and n_duplicates > 0:
-            df.drop_duplicates(subset=subset_cols, keep=False, inplace=True)
+            keep_param = "first" if keep_first else False
+            df.drop_duplicates(subset=subset_cols, keep=keep_param, inplace=True)
             rows_dropped = initial_rows - len(df)
 
         remaining_rows = len(session.dataframe)
@@ -192,7 +199,7 @@ def make_tools(session):
             "rows_dropped": rows_dropped,
             "remaining_rows": remaining_rows,
         }
-        session.store_result("check_duplicates_tool", {"subset": subset, "drop": drop}, summary)
+        session.store_result("check_duplicates_tool", {"subset": subset, "drop": drop, "keep_first": keep_first}, summary)
         return summary
 
     @tool
