@@ -141,14 +141,6 @@ def make_tools(session):
         if any(pd.isna(lbl) or str(lbl).strip() == "" for lbl in df_labels):
             return {"error": "DataFrame 'category_name' contains missing or empty label values."}
 
-        # Verify alignment and label value consistency with session.labels
-        if session.labels is not None:
-            sess_labels = list(session.labels)
-            if len(sess_labels) != len(df_labels):
-                return {"error": f"session.labels count ({len(sess_labels)}) mismatches DataFrame row count ({len(df_labels)})."}
-            if sess_labels != df_labels:
-                return {"error": "session.labels values do not match DataFrame 'category_name' values."}
-
         labels = df_labels
 
         # Preserve alphabetical order for categories

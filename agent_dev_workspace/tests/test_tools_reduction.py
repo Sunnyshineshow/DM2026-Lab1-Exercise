@@ -126,20 +126,26 @@ def test_tools_reduction_all():
     assert "error" in mismatch_err
     assert "do not match DataFrame" in mismatch_err["error"]
 
-    # 6. Mismatched Category Labels Check in binarize_labels_tool
-    bin_mismatch_err = binarize_labels_tool.invoke({})
-    assert "error" in bin_mismatch_err
-    assert "do not match DataFrame" in bin_mismatch_err["error"]
-    session.labels = original_labels  # Restore valid labels
-
-    # 7. Binarize Labels Tool
+    # 6. Binarize Labels Tool with mismatched session.labels
+    stale_labels = list(session.labels)
     bin_res = binarize_labels_tool.invoke({})
+    # Binarization should succeed despite stale session.labels
+    assert "error" not in bin_res
     assert bin_res["n_documents"] == 8
     assert bin_res["n_categories"] == 2
-    assert bin_res["categories"] == ["catA", "catB"]
-    assert bin_res["binary_columns"] == ["category_catA", "category_catB"]
-    assert bin_res["shape"] == [8, 2]
-    assert bin_res["binary_matrix"] == [
+    # Binarization must not modify session.labels
+    assert list(session.labels) == stale_labels
+    # Restore labels after testing the mismatch behavior
+    session.labels = original_labels
+
+    # 7. Binarize Labels Tool assertions with valid labels
+    bin_res_valid = binarize_labels_tool.invoke({})
+    assert bin_res_valid["n_documents"] == 8
+    assert bin_res_valid["n_categories"] == 2
+    assert bin_res_valid["categories"] == ["catA", "catB"]
+    assert bin_res_valid["binary_columns"] == ["category_catA", "category_catB"]
+    assert bin_res_valid["shape"] == [8, 2]
+    assert bin_res_valid["binary_matrix"] == [
         [1, 0],
         [1, 0],
         [1, 0],
