@@ -1,27 +1,40 @@
 # AgentPipeline Report - Napon Jirapakatawee (115065428)
 
-Overall, the 17-step process of AgentPipeline is completed using the provided data while a customized example case is also implemented. The main focus of this notebook is to utilized student-developed tools from AgentDev into Data Mining tasks. Note that the session has to be repeatedly reset due to context limitation management of the harness (the harness cannot widthstand the context length over 1M), making the referencing of action ID limited, or may be duplicated with other sessions.
-
-In the beginning, AgenticPipeline is loaded with 20 Newsgroup dataset consists of four categories: alt.atheism, soc.religion.christian, comp.graphics, and sci.med. The dataset has been inspected for duplicated data and missing data, which happened to be none. The boxplot (Napon_Jirapakatawee_agentic-pipeline_plot_describe_data_6.png) is then generated, which showed substantial variation within every category, including extreme outliers exceeding 50,000 characters. This indicates that some documents are significantly longer than others and may affects later analysis and calculations in raw term frequencies.
+The following dataset describe the ### FILL HERE ###. The goal is to investigate whether ### FILL HERE ###. The experiment has been conducted with 200 sample records from 4 category: alt.atheism, soc.religion.christian, comp.graphics, and sci.med (`sample_data_2`). Most of the records contain short to medium in length with 1,819 characters in mean and 1,145 in median, suggested that there are a small amount documents with an excessive number of character length. It can then be observed via the boxplot of the data that alt.atheism contains some documents that are excessively long in text length compared to other category (Napon_Jirapakatawee_agentic-pipeline_plot_describe_data_6.png).
+The Document-Term Matrix contains 8,780 vocabulary terms (dtm_7). The most frequent words (term_freq_8) were common stopwords, including "the" (2,386), "to" (1,494), and "of" (1,450), which explains the reason that correlation heatmap (Napon_Jirapakatawee_agentic-pipeline_plot_feature_corr_9.png) is difficult to interpreted. 
 
 ![Describe Boxplot](../plots/Napon_Jirapakatawee_agentic-pipeline_plot_describe_data_6.png)
 
-After constructing Document-Term Matrix, the term frequencies has been observed and applied feature filtering has been applied. In the generated heatmap (Napon_Jirapakatawee_agentic-pipeline_plot_dtm_heatmap_11.png), which the function has been modified to sort from the most frequent words, found that most words from the map are stopwords. This is because stopword removal did not applied into the dataset, causing the dataset to contain significant amount of unnecessary vocabulary and are difficult to analyze. Other such as feature correlation heatmap (Napon_Jirapakatawee_agentic-pipeline_plot_feature_corr_7.png) showed strong positive correlations between many word counts, including a correlation close to 1.0 between jpeg and gif.
-
 ![Variance filter result](../plots/Napon_Jirapakatawee_agentic-pipeline_plot_dtm_heatmap_11.png)
 
-![Feature Correlation](../plots/Napon_Jirapakatawee_agentic-pipeline_plot_feature_corr_7.png)
+![Term Frequency Correlation](../plots/Napon_Jirapakatawee_agentic-pipeline_plot_feature_corr_9.png)
 
-Pearson and Spearman correlations has been explored and visualized for alt.atheism. Both filters shared similar trends, even though some words have different correlation than others (pearson_filter_4, spearman_filter_5, Napon_Jirapakatawee_agentic-pipeline_plot_turn34.png, Napon_Jirapakatawee_agentic-pipeline_plot_turn42.png). Pattern mining also has been demonstrated (patterns_6), with most patterns related to the email formats. In the meantime, dimensionality reduction results (Napon_Jirapakatawee_agentic-pipeline_plot_reduction_7.png, Napon_Jirapakatawee_agentic-pipeline_plot_reduction_8.png, Napon_Jirapakatawee_agentic-pipeline_plot_reduction_9.png) reveal different levels of separation among the four Newsgroups categories. Most documents in PCA cluster near the origin while contain marginal amount of outliers. On the otherhand, t-SNE and UMAP reveals more visible grouping and clusters between categories.
+Meanwhile, the analysis from Pearson and Spearman correlation has identified words associated with each sampled category. In Pearson correlation, alt.atheism contains some relevant philosophical vocabulary, but prominent names may reflect particular contributors. In the meantime, most words from soc.religion.christian aligned with its category such as "christ" or "jesus", similar to comp.graphics and sci.med that has strong evidence that its words terms associated with the category (Napon_Jirapakatawee_agentic-pipeline_plot_turn36.png, Napon_Jirapakatawee_agentic-pipeline_plot_turn44.png, Napon_Jirapakatawee_agentic-pipeline_plot_turn52.png, Napon_Jirapakatawee_agentic-pipeline_plot_turn60.png). The Spearman correlation results illustrate similar outcome, except for the word "atheists" which gain a better spotlight compare to Pearson correlation. In addition, Spearman Correlation explicitly highlights religious vocabulary into higher ranks in soc.religion.christian category compare to Pearson. (Napon_Jirapakatawee_agentic-pipeline_plot_turn82.png, Napon_Jirapakatawee_agentic-pipeline_plot_turn86.png, Napon_Jirapakatawee_agentic-pipeline_plot_turn90.png, Napon_Jirapakatawee_agentic-pipeline_plot_turn94.png) This suggest that word-count rankings may capture category associations that are less prominent when using raw word counts.
 
-![Pearson](../plots/Napon_Jirapakatawee_agentic-pipeline_plot_turn34.png)
+![Pearson Atheism](../plots/Napon_Jirapakatawee_agentic-pipeline_plot_turn36.png)
 
-![Variance filter result](../plots/Napon_Jirapakatawee_agentic-pipeline_plot_turn42.png)
+![Pearson Religion](../plots/Napon_Jirapakatawee_agentic-pipeline_plot_turn44.png)
 
-![Variance filter result](../plots/Napon_Jirapakatawee_agentic-pipeline_plot_reduction_7.png)
+![Pearson Computer Graphics](../plots/Napon_Jirapakatawee_agentic-pipeline_plot_turn52.png)
 
-![Variance filter result](../plots/Napon_Jirapakatawee_agentic-pipeline_plot_reduction_8.png)
+![Pearson SciMed](../plots/Napon_Jirapakatawee_agentic-pipeline_plot_turn60.png)
 
-![Variance filter result](../plots/Napon_Jirapakatawee_agentic-pipeline_plot_reduction_9.png)
+![Spearman Athiesm](../plots/Napon_Jirapakatawee_agentic-pipeline_plot_turn82.png)
 
-For an additional practical experiment, 1,178 documents of comp.graphics and sci.med. I loaded 1,178 documents (load_dataset_1) has been randomly sampled 100 using seed 3939 (sample_data_2) for comparison. The resulting DTM contained 5,197 terms with 97.39% sparsity (dtm_3). Spearman filtering identified graphics as positively associated with comp.graphics (0.4631), while article was associated with sci.med (0.4714). FP-Growth with TF-IDF filtering produced 183 patterns for graphics and 4,123 for medicine at minimum support 10 (patterns_7, patterns_8). Nevertheless, many patterns involved message-header metadata. These findings suggest that the categories contain distinguishable vocabulary, but preprocessing and document-length differences may influence the analysis.
+![Spearman Christian](../plots/Napon_Jirapakatawee_agentic-pipeline_plot_turn86.png)
+
+![Spearman Computer Graphics](../plots/Napon_Jirapakatawee_agentic-pipeline_plot_turn90.png)
+
+![Spearman SciMed](../plots/Napon_Jirapakatawee_agentic-pipeline_plot_turn94.png)
+
+Dimensionality reduction of PCA,t-SNE and UMAP has been implemented to examine whether the three sentiment categories formed distinguishable groups. The PCA visualization (Napon_Jirapakatawee_agentic-pipeline_plot_reduction_5.png) shows intense clustering in all category with some outliers of alt.atheism. Such clustering therefore cannot provide clear separation between the four categories in two dimensions, while the outlier might come from unusually long documents which aligned with the boxplot results in the first paragraph. Meanwhile, the UMAP visualization has been perform with neighbor value of 2 and 3 respectively. Because the colors are overlapping, this suggests that documents from different categories may share similar vocabulary with some distinction such as alt.atheism and sci.med (Napon_Jirapakatawee_agentic-pipeline_plot_reduction_10.png, Napon_Jirapakatawee_agentic-pipeline_plot_reduction_8.png). t-SNE illustrated partial grouping with substantial overlap; several clusters of soc.religion.christian and comp.graphics can be observed in different areas of the graph. Nevertheless, there are still observable overlaps between categories, suggesting that different categories may contain overlapping word-frequency patterns.(Napon_Jirapakatawee_agentic-pipeline_plot_reduction_5.png, Napon_Jirapakatawee_agentic-pipeline_plot_reduction_8.png, Napon_Jirapakatawee_agentic-pipeline_plot_reduction_10.png, Napon_Jirapakatawee_agentic-pipeline_plot_reduction_6.png)
+
+![PCA](../plots/Napon_Jirapakatawee_agentic-pipeline_plot_reduction_5.png)
+
+![UMAP n=2](../plots/Napon_Jirapakatawee_agentic-pipeline_plot_reduction_8.png)
+
+![UMAP n=3](../plots/Napon_Jirapakatawee_agentic-pipeline_plot_reduction_10.png)
+
+![t-SNE](../plots/Napon_Jirapakatawee_agentic-pipeline_plot_reduction_6.png)
+
+Cosine similarity analysis reveal moderate vocabulary similarity between paired observed groups with some document samples: alt.atheism and soc.religion.christian, comp.graphics and soc.religion.christian. The observed similarity may partly result from common stopwords that were not removed during preprocessing. Consequently, these shared terms may make it more difficult to distinguish document topics using raw word-frequency representations alone. (cosine_sim_14, cosine_sim_25)
